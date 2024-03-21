@@ -8,9 +8,25 @@ fi
 
 read -p "Enter a package name:" PACKAGE_NAME
 
-if ! pacman -Qi $PACKAGE_NAME &> /dev/null; then
-    echo "Пакет $PACKAGE_NAME не установлен."
-    read -p "Enter a package name: " PACKAGE_NAME
+if command -v pacman &> /dev/null; then
+    PKG_MANAGER="pacman"
+elif command -v apt &> /dev/null; then
+    PKG_MANAGER="apt"
+else
+    echo "Neither pacman nor apt is available."
+    exit 1
+fi
+
+if [ "$PKG_MANAGER" = "pacman" ]; then
+    if ! pacman -Qi $PACKAGE_NAME &> /dev/null; then
+        echo "Package $PACKAGE_NAME not installed."
+        exit 1
+    fi
+elif [ "$PKG_MANAGER" = "apt" ]; then
+    if ! dpkg -l $PACKAGE_NAME &> /dev/null; then
+        echo "Package $PACKAGE_NAME not installed."
+        exit 1
+    fi
 fi
 
 APPDIR_ROOT="$PACKAGE_NAME.AppDir"
@@ -19,18 +35,18 @@ if [ -d "$APPDIR_ROOT" ]; then
     rm -r "$APPDIR_ROOT"
 fi
 
-pacman -Ql $PACKAGE_NAME | while read -r package filepath; do
-    if [[ "$filepath" != */ ]]; then
-        dest_dir="$APPDIR_ROOT/$(dirname "$filepath" | sed "s|^/||")"
-        mkdir -p "$dest_dir"
-
-        cp "$filepath" "$dest_dir/"
-    fi
-done
-
-if pacman -Qi qt6-base &> /dev/null; then
-    pacman -Ql qt6-base | while read -r package filepath; do
+if [ "$PKG_MANAGER" = "pacman" ]; then
+    pacman -Ql $PACKAGE_NAME | while read -r package filepath; do
         if [[ "$filepath" != */ ]]; then
+            dest_dir="$APPDIR_ROOT/$(dirname "$filepath" | sed "s|^/||")"
+            mkdir -p "$dest_dir"
+
+            cp "$filepath" "$dest_dir/"
+        fi
+    done
+elif [ "$PKG_MANAGER" = "apt" ]; then
+    dpkg -L $PACKAGE_NAME | while read filepath; do
+        if [[ -f "$filepath" && "$filepath" != */ ]]; then
             dest_dir="$APPDIR_ROOT/$(dirname "$filepath" | sed "s|^/||")"
             mkdir -p "$dest_dir"
 

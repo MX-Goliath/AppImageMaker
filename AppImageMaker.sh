@@ -1,16 +1,16 @@
 #!/bin/bash
 
 if [ ! -f "appimagetool-x86_64.AppImage" ]; then
-    echo "appimagetool не найден, скачивание..."
+    echo "appimagetool not found, downloading..."
     wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
     chmod +x appimagetool-x86_64.AppImage
 fi
 
-read -p "Введите название пакета: " PACKAGE_NAME
+read -p "Enter a package name:" PACKAGE_NAME
 
 if ! pacman -Qi $PACKAGE_NAME &> /dev/null; then
     echo "Пакет $PACKAGE_NAME не установлен."
-    read -p "Введите название пакета: " PACKAGE_NAME
+    read -p "Enter a package name: " PACKAGE_NAME
 fi
 
 APPDIR_ROOT="$PACKAGE_NAME.AppDir"
@@ -39,7 +39,7 @@ if pacman -Qi qt6-base &> /dev/null; then
     done
 fi
 
-echo "Копирование файлов для $PACKAGE_NAME завершено."
+echo "Copying of files for $PACKAGE_NAME is complete."
 
 
 
@@ -55,7 +55,7 @@ ldd "$executable" | grep '=> /' | awk '{print $3}' | while read lib; do
 done
 
 
-echo "Копирование зависимостей для $PACKAGE_NAME завершено."
+echo "Dependency copying for $PACKAGE_NAME is complete."
 
 
 dest_qt_dir="$APPDIR_ROOT/usr/plugins/platforms"
@@ -66,20 +66,16 @@ cp "/usr/lib/qt/plugins/platforms/libqxcb.so" "$dest_qt_dir"
 cat > "$APPDIR_ROOT/AppRun" <<EOF
 #!/bin/bash
 
-# Определяем путь к корню AppDir
 APPDIR="\$(dirname "\$(readlink -f "\$0")")"
 
-# Устанавливаем необходимые переменные окружения для поиска библиотек и ресурсов
 export LD_LIBRARY_PATH="\${APPDIR}/usr/lib:\${LD_LIBRARY_PATH}"
 export XDG_DATA_DIRS="\${APPDIR}/usr/share:\${XDG_DATA_DIRS}"
 export QT_PLUGIN_PATH="\${APPDIR}/usr/plugins"
 export ELECTRON_APP_PATH="\${APPDIR}/usr/lib/obsidian"
 export QT_QPA_PLATFORM=xcb
 
-# Переходим в каталог bin внутри AppDir
 cd "\${APPDIR}/usr/bin"
 
-# Запускаем приложение, заданное в переменной PACKAGE_NAME, передавая все аргументы командной строки
 ./${PACKAGE_NAME} "\$@"
 EOF
 
@@ -99,9 +95,9 @@ FILE_TO_COPY=$(echo "$FOUND_FILES" | head -n 1)
 
 if [ -n "$FILE_TO_COPY" ]; then
     cp "$FILE_TO_COPY" "$APPDIR_ROOT/"
-    echo "Файл $FILE_TO_COPY скопирован в $APPDIR_ROOT"
+    echo "File $FILE_TO_COPY copied to the $APPDIR_ROOT"
 else
-    echo "Файлы с заданными расширениями не найдены."
+    echo "No files with the given extensions were found."
 fi
 if [ -z "$FILE_TO_COPY" ]; then
     SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -110,18 +106,18 @@ if [ -z "$FILE_TO_COPY" ]; then
 
     if [ -f "$DEFAULT_ICON_PATH" ]; then
         FILE_TO_COPY="$DEFAULT_ICON_PATH"
-        echo "Используется иконка по умолчанию: $DEFAULT_ICON_PATH"
+        echo "The default icon is used: $DEFAULT_ICON_PATH"
     else
-        echo "Иконка по умолчанию не найдена в $SCRIPT_DIR"
+        echo "Default icon not found in $SCRIPT_DIR"
         exit 1
     fi
 fi
 
 if [ -n "$FILE_TO_COPY" ]; then
     cp "$FILE_TO_COPY" "$APPDIR_ROOT/$ICON_VALUE.png"
-    echo "Иконка $FILE_TO_COPY скопирована и переименована в $APPDIR_ROOT/$ICON_VALUE.png"
+    echo "Icon $FILE_TO_COPY copied and renamed to $APPDIR_ROOT/$ICON_VALUE.png"
 else
-    echo "Файл иконки не был скопирован."
+    echo "The icon file has not been copied."
 fi
 
 PNG_FILE=$(find "$APPDIR_ROOT" -maxdepth 1 -type f -name "*.png" -print -quit)

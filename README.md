@@ -21,8 +21,8 @@ This repository contains a Bash script that automates the process of converting 
 ## Usage
 
 1. Clone this repository or download the script to your local machine.
-2. Ensure the script is executable: `chmod +x package_to_appimage.sh`
-3. Run the script: `./package_to_appimage.sh`
+2. Ensure the script is executable: `chmod +x AppImageMaker.sh`
+3. Run the script: `./AppImageMaker.sh`
 4. Follow the on-screen prompts to enter the package name you want to convert.
 5. Once completed, the script will produce an AppImage in the current directory.
 
